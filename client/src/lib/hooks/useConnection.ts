@@ -54,6 +54,7 @@ interface UseConnectionOptions {
   env: Record<string, string>;
   bearerToken?: string;
   headerName?: string;
+  customHeaders?: Record<string, string>;
   config: InspectorConfig;
   onNotification?: (notification: Notification) => void;
   onStdErrNotification?: (notification: Notification) => void;
@@ -71,6 +72,7 @@ export function useConnection({
   env,
   bearerToken,
   headerName,
+  customHeaders,
   config,
   onNotification,
   onStdErrNotification,
@@ -346,6 +348,14 @@ export function useConnection({
         case "streamable-http":
           mcpProxyServerUrl = new URL(`${getMCPProxyAddress(config)}/mcp`);
           mcpProxyServerUrl.searchParams.append("url", sseUrl);
+          // Add custom headers to the URL parameters for the proxy server
+          if (customHeaders && Object.keys(customHeaders).length > 0) {
+            (mcpProxyServerUrl as URL).searchParams.append(
+              "customHeaders",
+              JSON.stringify(customHeaders)
+            );
+          }
+
           transportOptions = {
             authProvider: serverAuthProvider,
             eventSourceInit: {
@@ -355,7 +365,7 @@ export function useConnection({
               ) => fetch(url, { ...init, headers }),
             },
             requestInit: {
-              headers,
+              headers: customHeaders,
             },
             // TODO these should be configurable...
             reconnectionOptions: {

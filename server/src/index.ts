@@ -26,6 +26,7 @@ const STREAMABLE_HTTP_HEADERS_PASSTHROUGH = [
   "authorization",
   "mcp-session-id",
   "last-event-id",
+  'x-impersonate-user'
 ];
 
 const defaultEnvironment = {

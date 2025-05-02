@@ -109,6 +109,11 @@ const App = () => {
     return localStorage.getItem("lastHeaderName") || "";
   });
 
+  const [customHeaders, setCustomHeaders] = useState<Record<string, string>>(() => {
+    const savedHeaders = localStorage.getItem("lastCustomHeaders");
+    return savedHeaders ? JSON.parse(savedHeaders) : {};
+  });
+
   const [pendingSampleRequests, setPendingSampleRequests] = useState<
     Array<
       PendingRequest & {
@@ -183,6 +188,7 @@ const App = () => {
     env,
     bearerToken,
     headerName,
+    customHeaders,
     config,
     onNotification: (notification) => {
       setNotifications((prev) => [...prev, notification as ServerNotification]);
@@ -225,6 +231,10 @@ const App = () => {
   useEffect(() => {
     localStorage.setItem("lastHeaderName", headerName);
   }, [headerName]);
+
+  useEffect(() => {
+    localStorage.setItem("lastCustomHeaders", JSON.stringify(customHeaders));
+  }, [customHeaders]);
 
   useEffect(() => {
     localStorage.setItem(CONFIG_LOCAL_STORAGE_KEY, JSON.stringify(config));
@@ -581,6 +591,8 @@ const App = () => {
         setBearerToken={setBearerToken}
         headerName={headerName}
         setHeaderName={setHeaderName}
+        customHeaders={customHeaders}
+        setCustomHeaders={setCustomHeaders}
         onConnect={connectMcpServer}
         onDisconnect={disconnectMcpServer}
         stdErrNotifications={stdErrNotifications}
