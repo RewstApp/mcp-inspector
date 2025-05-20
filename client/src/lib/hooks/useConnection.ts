@@ -302,10 +302,28 @@ export function useConnection({
         headers[authHeaderName] = `Bearer ${token}`;
       }
 
+      // Add custom headers if provided
+      if (customHeaders && Object.keys(customHeaders).length > 0) {
+        Object.entries(customHeaders).forEach(([key, value]) => {
+          headers[key] = value;
+        });
+      }
+
       // Create appropriate transport
       let transportOptions:
-        | StreamableHTTPClientTransportOptions
-        | SSEClientTransportOptions;
+        {
+          authProvider: InspectorOAuthClientProvider;
+          eventSourceInit: {
+            fetch: (url: (string | URL | globalThis.Request), init: (RequestInit | undefined)) => Promise<Response>
+          };
+          requestInit: { headers: Record<string, string> | undefined };
+          reconnectionOptions: {
+            maxReconnectionDelay: number;
+            initialReconnectionDelay: number;
+            reconnectionDelayGrowFactor: number;
+            maxRetries: number
+          }
+        };
 
       let mcpProxyServerUrl;
       switch (transportType) {
@@ -348,14 +366,8 @@ export function useConnection({
         case "streamable-http":
           mcpProxyServerUrl = new URL(`${getMCPProxyAddress(config)}/mcp`);
           mcpProxyServerUrl.searchParams.append("url", sseUrl);
-          // Add custom headers to the URL parameters for the proxy server
-          if (customHeaders && Object.keys(customHeaders).length > 0) {
-            (mcpProxyServerUrl as URL).searchParams.append(
-              "customHeaders",
-              JSON.stringify(customHeaders)
-            );
-          }
 
+          console.log(headers)
           transportOptions = {
             authProvider: serverAuthProvider,
             eventSourceInit: {
@@ -365,7 +377,10 @@ export function useConnection({
               ) => fetch(url, { ...init, headers }),
             },
             requestInit: {
-              headers: customHeaders,
+              headers: {
+                ...headers,
+                ...customHeaders
+              },
             },
             // TODO these should be configurable...
             reconnectionOptions: {
